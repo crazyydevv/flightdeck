@@ -1,0 +1,39 @@
+# The forward test: once a week, pull the Bitget candles that have printed since
+# the study was frozen, fly the same plans through them with the engines
+# unchanged, and commit the score to research/FORWARD.md. The site's landing page
+# reads the running total from research/headline.json, so each run updates it too.
+#
+# Needs no secrets: it reads Bitget's public market API only. To run it by hand,
+# open the Actions tab, choose "forward-test" and press "Run workflow".
+name: forward-test
+on:
+  schedule:
+    - cron: '23 6 * * 1' # Mondays, 06:23 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: forward-test
+  cancel-in-progress: false
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Fetch the hours since the last run
+        run: npx tsx research/forward-fetch.ts
+      - name: Fly the plans and write the score
+        run: npx tsx research/forward.ts
+      - name: Commit the result
+        run: |
+          git config user.name "flightdeck-forward-test"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/forward-hourly.json research/FORWARD.md research/headline.json
+          if git diff --cached --quiet; then echo "Nothing new."; exit 0; fi
+          git commit -m "Forward test: score on new Bitget candles"
+          git push

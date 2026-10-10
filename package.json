@@ -1,0 +1,33 @@
+{
+  "name": "flightdeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FLIGHTDECK: radar, preflight, tower and black box for leveraged trades on Bitget stock perps and crypto.",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "build:netlify": "node scripts/build.mjs --netlify",
+    "build:mcp": "node scripts/build.mjs --mcp",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "demo": "tsx scripts/demo-flight.ts",
+    "study": "tsx research/run.ts day && tsx research/run.ts swing && tsx research/run.ts naked && tsx research/report.ts && tsx research/audit.ts",
+    "study:report": "tsx research/report.ts",
+    "study:audit": "tsx research/audit.ts",
+    "forward": "tsx research/forward-fetch.ts && tsx research/forward.ts",
+    "mcp": "node dist/mcp/tower.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

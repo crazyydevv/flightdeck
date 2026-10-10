@@ -1,0 +1,127 @@
+{
+  "planHash": "cb76a5dd18fcf67a9b8317172c86da2dcb0742ab5a1f346f970fccc39e336bfe",
+  "at": 1791378000000,
+  "plan": {
+    "symbol": "NVDAUSDT",
+    "side": "long",
+    "leverage": 20,
+    "margin": 400,
+    "entry": 237.32,
+    "stop": 231.39,
+    "target": 251.56,
+    "horizonH": 72,
+    "origin": "pilot",
+    "thesis": "Dip into the open, hold over two sessions."
+  },
+  "verdict": "NO-GO",
+  "checks": [
+    {
+      "id": "runway",
+      "label": "Liquidation runway",
+      "status": "fail",
+      "readout": "1.4σ",
+      "headline": "Liquidation at 226.64, 4.5% from entry.",
+      "detail": "A normal 72h move in NVDA is 3.1%. Liquidation sits 1.4 of those away. Under 2 is a coin toss on noise alone."
+    },
+    {
+      "id": "gap",
+      "label": "Gap shock",
+      "status": "fail",
+      "readout": "-7.2%",
+      "headline": "A 7.2% move liquidates this position. That is a 4-sigma day for NVDA.",
+      "detail": "Shock size: 4-sigma day (7.2%). This flight crosses 3 opening bells; each is a chance to gap past a stop. Loss at the shock is 400.00 USDT against 209.90 planned."
+    },
+    {
+      "id": "earnings",
+      "label": "Earnings",
+      "status": "pass",
+      "readout": "clear",
+      "headline": "Lands before NVDA reports on 17 NOV 2105Z (estimated date).",
+      "detail": "A hold that crosses a results date is judged on the gap, not on the stop."
+    },
+    {
+      "id": "replay",
+      "label": "Regime replay",
+      "status": "pass",
+      "readout": "0/84",
+      "headline": "Flown through 84 past daily windows: 5 reached target, 32 stopped out, 0 liquidated.",
+      "detail": "Average result 10.53 USDT per flight, worst -225.10, best 470.43. 47 ran out of time before either level."
+    },
+    {
+      "id": "stop",
+      "label": "Stop integrity",
+      "status": "pass",
+      "readout": "-2.5%",
+      "headline": "Stop 2.5% from entry, clear of noise and inside liquidation.",
+      "detail": "Stop at 231.39; a normal 72h move is 3.1%. Loss at the stop: 209.90 USDT including fees and slippage."
+    },
+    {
+      "id": "payoff",
+      "label": "Payoff",
+      "status": "caution",
+      "readout": "2.24R",
+      "headline": "Risking 209.90 to make 470.43 USDT: 2.24 to 1.",
+      "detail": "This needs to win 31% of the time to break even. Of the 37 replayed flights that reached a level, 14% reached the target."
+    },
+    {
+      "id": "drag",
+      "label": "Fees and funding",
+      "status": "pass",
+      "readout": "2%",
+      "headline": "Round-trip fees 9.60 USDT, funding 0.00 over 72h.",
+      "detail": "Costs take 2% of the gross reward. Taker fee 0.06% per side, funding 0.0000% per 8h."
+    },
+    {
+      "id": "exposure",
+      "label": "Risk to account",
+      "status": "caution",
+      "readout": "2.2%",
+      "headline": "209.90 USDT at risk, 2.2% of a 9,395 USDT account.",
+      "detail": "Under 2% per flight leaves room to be wrong many times in a row. Over 5% does not."
+    }
+  ],
+  "numbers": {
+    "notional": 8000,
+    "qty": 33.70975897522333,
+    "liqPrice": 226.64059999999998,
+    "liqDist": 0.04500000000000007,
+    "sigmaDay": 0.018065077520680976,
+    "sigmaHorizon": 0.031289632108489854,
+    "shock": 0.0722603100827239,
+    "shockSource": "4-sigma day",
+    "lossAtStop": 209.8986684645207,
+    "lossAtShock": 400,
+    "reward": 470.4269678071805,
+    "fees": 9.6,
+    "funding": 0,
+    "rr": 2.24120987164193,
+    "riskPct": 0.0223424092768444,
+    "usOpen": false,
+    "opensCrossed": 3,
+    "earningsAt": null
+  },
+  "replay": {
+    "basis": "daily",
+    "windows": 84,
+    "target": 5,
+    "stopped": 32,
+    "liquidated": 0,
+    "timeout": 47,
+    "meanPnl": 10.534033143940837,
+    "worstPnl": -225.09907298162875,
+    "bestPnl": 470.4269678071805
+  },
+  "monteCarlo": {
+    "paths": 1000,
+    "liquidated": 0,
+    "stopped": 397,
+    "target": 50,
+    "timeout": 553
+  },
+  "guidance": {
+    "fixable": true,
+    "leverage": 12,
+    "margin": 400,
+    "blockers": []
+  }
+}

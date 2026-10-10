@@ -1,0 +1,20 @@
+# Wakes Night Watch a few minutes after every hourly candle closes.
+# Add two repository secrets: FLIGHTDECK_URL (your live site, for example
+# https://your-app.netlify.app) and CRON_SECRET (the same value as the
+# CRON_SECRET variable on your host).
+name: night-watch
+on:
+  schedule:
+    - cron: '4 * * * *'
+  workflow_dispatch:
+jobs:
+  round:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run one Night Watch round
+        env:
+          FLIGHTDECK_URL: ${{ secrets.FLIGHTDECK_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$FLIGHTDECK_URL" ]; then echo "FLIGHTDECK_URL is not set as a repository secret; nothing to do."; exit 0; fi
+          curl --fail-with-body -sS -H "Authorization: Bearer $CRON_SECRET" "$FLIGHTDECK_URL/api/watch"

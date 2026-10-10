@@ -1,0 +1,27 @@
+{
+ "scenarios": 3,
+ "plansAllScenarios": 95886,
+ "liquidatedReroutedAllScenarios": 0,
+ "plans": 32634,
+ "days": 33,
+ "contracts": 8,
+ "liquidated50": 0.242,
+ "forecast50": 0.253,
+ "liquidatedRerouted": 0,
+ "meanReroutedLeverage": 6.19,
+ "gainKept": 0.289,
+ "lossKept": 0.263,
+ "flatCap": 6,
+ "monthLiquidations50": 7.84,
+ "monthEnd50": -1478,
+ "monthEndRerouted": -114,
+ "forward": {
+  "through": 1791554400000,
+  "entryHours": 19,
+  "plans": 798,
+  "liquidated50": 0.468,
+  "forecast50": 0.236,
+  "liquidatedAsFiled": 0.112,
+  "liquidatedRerouted": 0
+ }
+}
