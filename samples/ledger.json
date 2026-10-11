@@ -1,0 +1,164 @@
+[
+  {
+    "seq": 1,
+    "at": 1791378000000,
+    "kind": "refusal",
+    "summary": "Refused: NVDA 20x long",
+    "body": {
+      "planHash": "cb76a5dd18fcf67a9b8317172c86da2dcb0742ab5a1f346f970fccc39e336bfe",
+      "failed": [
+        "preflight",
+        "lev-rwa",
+        "offhours"
+      ]
+    },
+    "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+    "hash": "b41eefbe332c399d30c97846308bd19ad5a6442f95aeeac35afeda87e16672a4"
+  },
+  {
+    "seq": 2,
+    "at": 1791378000000,
+    "kind": "clearance",
+    "summary": "Cleared after re-route: NVDA 5x long",
+    "body": {
+      "planHash": "35c77efb2438b7e2943dfcc0f250b62700308114611ad2cb6aeb35683c5196f3",
+      "rulesHash": "a6efe8f22796d4f3bfb80771125c9e9cff0eff996cff31a2f82645819075bf14",
+      "changes": [
+        "leverage 20x to 5x"
+      ]
+    },
+    "prev": "b41eefbe332c399d30c97846308bd19ad5a6442f95aeeac35afeda87e16672a4",
+    "hash": "23a8e4536602e0bc0e7673e4ec5a1521f7259cd0917ba474183f209ca06c591b"
+  },
+  {
+    "seq": 3,
+    "at": 1791378000000,
+    "kind": "takeoff",
+    "summary": "FDF02038 airborne at 237.32",
+    "body": {
+      "id": "FDF02038",
+      "entry": 237.32,
+      "qty": 8.427439743805833,
+      "liq": 191.0426,
+      "watch": true
+    },
+    "prev": "23a8e4536602e0bc0e7673e4ec5a1521f7259cd0917ba474183f209ca06c591b",
+    "hash": "b3582241a4b553f44c0f43db0bba6c3e3e5b00570718a265cbf2ec8d8b60f478"
+  },
+  {
+    "seq": 4,
+    "at": 1791482400000,
+    "kind": "landing",
+    "summary": "FDF02038 stopped, -56.27 USDT",
+    "body": {
+      "id": "FDF02038",
+      "outcome": "stopped",
+      "exit": 230.92721999999998,
+      "pnl": -56.27476824540719
+    },
+    "prev": "b3582241a4b553f44c0f43db0bba6c3e3e5b00570718a265cbf2ec8d8b60f478",
+    "hash": "754bfb00d52c26643f7e7cc4519c7cdca490190ec03a1f84b9f9c6339a00205d"
+  },
+  {
+    "seq": 5,
+    "at": 1791482400000,
+    "kind": "rule",
+    "summary": "Rule written from the logbook: Leverage on any perp",
+    "body": {
+      "id": "bb-lev",
+      "kind": "max_leverage",
+      "params": {
+        "cls": "any",
+        "max": 4
+      },
+      "evidence": "12 flights above 4x: -755.87 USDT"
+    },
+    "prev": "754bfb00d52c26643f7e7cc4519c7cdca490190ec03a1f84b9f9c6339a00205d",
+    "hash": "544b3f21735fcac1fe7abb7cbffde50dddd1edd05ecd04ef661aed36aff8faad"
+  },
+  {
+    "seq": 6,
+    "at": 1791482400000,
+    "kind": "rule",
+    "summary": "Rule written from the logbook: Stock perps while New York is closed",
+    "body": {
+      "id": "bb-offhours",
+      "kind": "offhours_leverage",
+      "params": {
+        "max": 3
+      },
+      "evidence": "6 off-hours flights above 3x: -623.37 USDT"
+    },
+    "prev": "544b3f21735fcac1fe7abb7cbffde50dddd1edd05ecd04ef661aed36aff8faad",
+    "hash": "9c2cf250a57e855421dbba45c5536b83b5bafa981dd8d4067c8ca97661dd54d2"
+  },
+  {
+    "seq": 7,
+    "at": 1791482400000,
+    "kind": "rule",
+    "summary": "Rule written from the logbook: Cooldown after a losing flight",
+    "body": {
+      "id": "bb-cooldown",
+      "kind": "cooldown_after_loss",
+      "params": {
+        "minutes": 60
+      },
+      "evidence": "9 flights within 30 min of a loss: -146.06 USDT"
+    },
+    "prev": "9c2cf250a57e855421dbba45c5536b83b5bafa981dd8d4067c8ca97661dd54d2",
+    "hash": "c9da0985cc9ad5c9e468824f2b623a06dcfd5b5f4843d66b6a7d8609a290c654"
+  },
+  {
+    "seq": 8,
+    "at": 1791482400000,
+    "kind": "rule",
+    "summary": "Rule written from the logbook: No larger position for 6h after a loss",
+    "body": {
+      "id": "bb-sizeup",
+      "kind": "no_size_up_after_loss",
+      "params": {
+        "hours": 6
+      },
+      "evidence": "5 sized-up flights after a loss: -133.70 USDT"
+    },
+    "prev": "c9da0985cc9ad5c9e468824f2b623a06dcfd5b5f4843d66b6a7d8609a290c654",
+    "hash": "17368804a320f54694d7e7fed198ac98b0c477dbec387ba7342888cc23fa8a56"
+  },
+  {
+    "seq": 9,
+    "at": 1791482400000,
+    "kind": "rule",
+    "summary": "Rule written from the logbook: Flights per 24 hours",
+    "body": {
+      "id": "bb-perday",
+      "kind": "max_flights_per_day",
+      "params": {
+        "n": 5
+      },
+      "evidence": "4 flights beyond the fifth of the day: -36.30 USDT"
+    },
+    "prev": "17368804a320f54694d7e7fed198ac98b0c477dbec387ba7342888cc23fa8a56",
+    "hash": "16080d703ac2f42fd4ab98157448dbd03272665e475f44328961933e91d4c028"
+  },
+  {
+    "seq": 10,
+    "at": 1791482400000,
+    "kind": "refusal",
+    "summary": "Refused agent momentum-bot-7: MSTR 25x long",
+    "body": {
+      "planHash": "d2dc0f5fc5740b3d3adefdad5122bf82ed7d9a2ad5ce9433ae032983136bf7fb",
+      "failed": [
+        "preflight",
+        "stop",
+        "risk",
+        "lev-rwa",
+        "agent",
+        "bb-lev",
+        "bb-cooldown",
+        "bb-sizeup"
+      ]
+    },
+    "prev": "16080d703ac2f42fd4ab98157448dbd03272665e475f44328961933e91d4c028",
+    "hash": "5c93c0a7e3f261a24127e17cfeb1fa2a8683ffe7cc80d268a5d05e0f3963a97c"
+  }
+]

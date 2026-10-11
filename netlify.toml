@@ -1,0 +1,18 @@
+# Netlify reads this file; Vercel reads vercel.json. Either host works.
+[build]
+  command = "npm run build:netlify"
+  publish = "dist/web"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# One function serves every server route. It is bundled by the build command.
+[functions]
+  directory = "dist/netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

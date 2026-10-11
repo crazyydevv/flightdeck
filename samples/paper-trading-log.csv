@@ -1,0 +1,3 @@
+timestamp_utc,flight,pair,direction,action,price,quantity,leverage,pnl_usdt,balance_usdt,venue
+2026-10-07T13:00:00.000Z,FDF02038,NVDAUSDT,long,open,237.32,8.4274,5,,,paper
+2026-10-08T18:00:00.000Z,FDF02038,NVDAUSDT,long,close:stopped,230.9272,8.4274,5,-56.27,9338.36,paper

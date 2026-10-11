@@ -1,0 +1,145 @@
+{
+  "rules": [
+    {
+      "id": "preflight",
+      "kind": "preflight_required",
+      "title": "Fresh preflight on this exact plan",
+      "params": {
+        "maxAgeMin": 30
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "stop",
+      "kind": "stop_required",
+      "title": "A working stop is filed",
+      "params": {},
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "risk",
+      "kind": "max_risk_pct",
+      "title": "Risk per flight",
+      "params": {
+        "pct": 5
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "lev-rwa",
+      "kind": "max_leverage",
+      "title": "Leverage on stock perps",
+      "params": {
+        "cls": "rwa",
+        "max": 10
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "lev-crypto",
+      "kind": "max_leverage",
+      "title": "Leverage on crypto perps",
+      "params": {
+        "cls": "crypto",
+        "max": 20
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "offhours",
+      "kind": "offhours_leverage",
+      "title": "Stock perps while New York is closed",
+      "params": {
+        "max": 5
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "daily-loss",
+      "kind": "daily_loss_stop",
+      "title": "Grounded after a bad day",
+      "params": {
+        "pct": 6
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "agent",
+      "kind": "agent_leverage_cap",
+      "title": "Leverage for orders filed by an agent",
+      "params": {
+        "max": 5
+      },
+      "source": "charter",
+      "enabled": true
+    },
+    {
+      "id": "bb-lev",
+      "kind": "max_leverage",
+      "title": "Leverage on any perp",
+      "params": {
+        "cls": "any",
+        "max": 4
+      },
+      "source": "blackbox",
+      "enabled": true,
+      "evidence": "12 flights above 4x: -755.87 USDT",
+      "addedAt": 1791482400000
+    },
+    {
+      "id": "bb-offhours",
+      "kind": "offhours_leverage",
+      "title": "Stock perps while New York is closed",
+      "params": {
+        "max": 3
+      },
+      "source": "blackbox",
+      "enabled": true,
+      "evidence": "6 off-hours flights above 3x: -623.37 USDT",
+      "addedAt": 1791482400000
+    },
+    {
+      "id": "bb-cooldown",
+      "kind": "cooldown_after_loss",
+      "title": "Cooldown after a losing flight",
+      "params": {
+        "minutes": 60
+      },
+      "source": "blackbox",
+      "enabled": true,
+      "evidence": "9 flights within 30 min of a loss: -146.06 USDT",
+      "addedAt": 1791482400000
+    },
+    {
+      "id": "bb-sizeup",
+      "kind": "no_size_up_after_loss",
+      "title": "No larger position for 6h after a loss",
+      "params": {
+        "hours": 6
+      },
+      "source": "blackbox",
+      "enabled": true,
+      "evidence": "5 sized-up flights after a loss: -133.70 USDT",
+      "addedAt": 1791482400000
+    },
+    {
+      "id": "bb-perday",
+      "kind": "max_flights_per_day",
+      "title": "Flights per 24 hours",
+      "params": {
+        "n": 5
+      },
+      "source": "blackbox",
+      "enabled": true,
+      "evidence": "4 flights beyond the fifth of the day: -36.30 USDT",
+      "addedAt": 1791482400000
+    }
+  ]
+}
