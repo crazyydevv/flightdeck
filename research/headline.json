@@ -16,12 +16,12 @@
  "monthEnd50": -1478,
  "monthEndRerouted": -114,
  "forward": {
-  "through": 1791619200000,
-  "entryHours": 37,
-  "plans": 1554,
-  "liquidated50": 0.462,
-  "forecast50": 0.236,
-  "liquidatedAsFiled": 0.11,
+  "through": 1791784800000,
+  "entryHours": 83,
+  "plans": 3486,
+  "liquidated50": 0.23,
+  "forecast50": 0.241,
+  "liquidatedAsFiled": 0.055,
   "liquidatedRerouted": 0
  }
 }
