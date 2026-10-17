@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { snapshot } from '../core/market';
+import { useEffect, useState } from 'react';
 import { verifyLedger } from '../core/tower';
 import { FlightPlan, LedgerEntry } from '../core/types';
 import { zulu } from '../core/util';
 import { Card, CopyButton, Pass } from './bits';
+import { instFor, PUBLIC_DECK } from './public';
 import { DeckApi } from './store';
 
 type Decision = { plan?: FlightPlan; decision?: string; failed?: string[] };
@@ -44,7 +44,9 @@ export function Ledger({ api }: { api: DeckApi }) {
         <p>Every clearance, refusal, take-off, landing, Night Watch action and new rule is one entry. Each entry's hash includes the one before it, so the record cannot be edited without the chain showing it.</p>
       </header>
 
-      <Card title="The chain" aside={`${deck.ledger.length} entries, SHA-256`} className="card-glass">
+      {!deck.ledger.length && <PublicLog own={deck.id} />}
+
+      <Card title="Your deck" aside={`${deck.ledger.length} entries, SHA-256`} className="card-glass">
         {deck.ledger.length ? (
           <>
             <div className="actions">
@@ -82,7 +84,7 @@ export function Ledger({ api }: { api: DeckApi }) {
             </p>
           </>
         ) : (
-          <p className="empty">Empty. The first clearance or refusal starts the chain.</p>
+          <p className="empty">Your deck is empty. It belongs to this browser only, with no sign-up, so a new browser or a private window always starts here. The first clearance or refusal starts your chain. FLIGHTDECK's own trades are in the public deck above.</p>
         )}
       </Card>
 
@@ -92,8 +94,7 @@ export function Ledger({ api }: { api: DeckApi }) {
             {decisions.map((e) => {
               const b = e.body as Decision;
               const plan = b.plan as FlightPlan;
-              const inst = market.instruments[plan.symbol] ?? snapshot().instruments[plan.symbol];
-              if (!inst) return null;
+              const inst = instFor(plan.symbol, market.instruments);
               const link = published && e.seq <= deck.mirrored ? passLink(deck.id, e.seq) : undefined;
               return (
                 <li key={e.seq}>
@@ -108,6 +109,68 @@ export function Ledger({ api }: { api: DeckApi }) {
           </ul>
         </Card>
       )}
+
+      {deck.ledger.length > 0 && <PublicLog own={deck.id} />}
     </div>
+  );
+}
+
+type Published = { entries: LedgerEntry[]; brokenAt: number | null };
+
+/** FLIGHTDECK's own deck, read from the server mirror. Read-only for everyone. */
+function PublicLog({ own }: { own: string }) {
+  const [state, setState] = useState<Published | 'error' | null>(null);
+  useEffect(() => {
+    if (own === PUBLIC_DECK) return;
+    let live = true;
+    (async () => {
+      try {
+        const r = await fetch(`api/ledger?deck=${PUBLIC_DECK}`);
+        const j = r.ok ? ((await r.json()) as Published) : null;
+        if (live) setState(j && Array.isArray(j.entries) ? j : 'error');
+      } catch {
+        if (live) setState('error');
+      }
+    })();
+    return () => { live = false; };
+  }, [own]);
+  // on the team's own browser the deck above already is the public deck
+  if (own === PUBLIC_DECK || state === null) return null;
+  if (state === 'error' || !state.entries.length) {
+    return (
+      <Card title="FLIGHTDECK's public deck" aside="read-only">
+        <p className="empty">The public deck could not be loaded right now. Every pass link we post still opens on its own.</p>
+      </Card>
+    );
+  }
+  const rows = [...state.entries].reverse();
+  const ok = state.brokenAt === 0;
+  return (
+    <Card title="FLIGHTDECK's public deck" aside={`read-only, ${state.entries.length} entries`} className="card-glass">
+      <p className="fine">These are FLIGHTDECK's own decisions, read from the server, not from your browser. Nothing in it can be edited or removed, including by us: the server only accepts a new entry that chains onto the last one. Open any entry to see its pass, re-checked as it loads.</p>
+      <p className={`readback readback-${ok ? 'ok' : state.brokenAt === null ? '' : 'no'}`} role="status">
+        {ok
+          ? `Verified on the server: all ${state.entries.length} entries recompute to their recorded hashes and chain from the first.`
+          : state.brokenAt === null
+            ? 'Showing the latest window of the chain. Each pass is verified when it opens.'
+            : `Chain broken at entry ${state.brokenAt}.`}
+      </p>
+      <div className="scroll-x tall">
+        <table className="tbl">
+          <thead><tr><th>#</th><th>Zulu</th><th>Entry</th><th>What happened</th><th>Pass</th></tr></thead>
+          <tbody>
+            {rows.map((e) => (
+              <tr key={e.seq}>
+                <td className="num">{e.seq}</td>
+                <td className="num">{zulu(e.at)}</td>
+                <td><span className={`tag tag-${e.kind}`}>{e.kind}</span></td>
+                <td className="wrap">{e.summary}</td>
+                <td className="mono"><a href={passLink(PUBLIC_DECK, e.seq)}>{e.hash.slice(0, 10)}</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

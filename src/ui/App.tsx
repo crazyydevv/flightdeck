@@ -4,16 +4,16 @@ import {
   PiLightningFill, PiMoonStarsFill, PiPauseFill, PiPlayFill, PiShieldCheckFill, PiX,
 } from 'react-icons/pi';
 import { hoursMinutes, sessionLabel } from '../core/calendar';
-import { snapshot } from '../core/market';
 import { FlightPlan, LedgerEntry } from '../core/types';
 import { fmtUsd, zulu } from '../core/util';
 import { BlackBox } from './BlackBox';
-import { Pass } from './bits';
+import { Card, Pass } from './bits';
 import { Board } from './Board';
 import { Flights } from './Flights';
 import { Gate } from './Gate';
 import { nextStep, reachedStop, STEPS } from './guide';
 import { Ledger } from './Ledger';
+import { instFor } from './public';
 import { Preflight } from './Preflight';
 import { scenarioById } from './scenarios';
 import { DeckApi, Tab, useDeck } from './store';
@@ -90,19 +90,27 @@ function PassViewer() {
     })();
   }, []);
   if (!state) return null;
-  const body = state.proof?.entry.body as { plan?: FlightPlan; decision?: string; failed?: string[] } | undefined;
-  const inst = body?.plan ? snapshot().instruments[body.plan.symbol] : undefined;
+  const entry = state.proof?.entry;
+  const body = entry?.body as { plan?: FlightPlan; decision?: string; failed?: string[] } | undefined;
+  const isDecision = entry && (entry.kind === 'clearance' || entry.kind === 'refusal') && body?.plan;
   return (
     <div className="overlay" role="dialog" aria-label="Shared boarding pass">
       <div className="overlay-box">
         {state.error && <p className="lead">{state.error}</p>}
-        {state.proof && body?.plan && inst && (
+        {state.proof && entry && (
           <>
-            <Pass plan={body.plan} inst={inst} state={body.decision === 'CLEARED' ? 'CLEARED' : 'REFUSED'} hash={state.proof.entry.hash} seq={state.proof.entry.seq} at={state.proof.entry.at} reasons={body.failed?.slice(0, 3)} />
+            {isDecision && body?.plan
+              ? <Pass plan={body.plan} inst={instFor(body.plan.symbol)} state={body.decision === 'CLEARED' ? 'CLEARED' : 'REFUSED'} hash={entry.hash} seq={entry.seq} at={entry.at} reasons={body.failed?.slice(0, 3)} />
+              : (
+                <Card title={`FLIGHTDECK ledger entry ${entry.seq}`} aside={<span className={`tag tag-${entry.kind}`}>{entry.kind}</span>} className="card-glass">
+                  <p className="lead">{entry.summary}</p>
+                  <p className="fine">{zulu(entry.at)} · hash {entry.hash.slice(0, 16)}</p>
+                </Card>
+              )}
             <p className={`readback readback-${state.proof.intact ? 'ok' : 'no'}`}>
               {state.proof.intact
-                ? `Verified. Entry ${state.proof.entry.seq} of ${state.proof.of} recomputes to its recorded hash and chains from the entry before it.`
-                : `Not verified. Entry ${state.proof.entry.seq} does not match its recorded hash.`}
+                ? `Verified. Entry ${entry.seq} of ${state.proof.of} recomputes to its recorded hash and chains from the entry before it.`
+                : `Not verified. Entry ${entry.seq} does not match its recorded hash.`}
             </p>
           </>
         )}
