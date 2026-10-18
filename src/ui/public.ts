@@ -19,3 +19,10 @@ export function instFor(symbol: string, live?: Record<string, Instrument>): Inst
   const base = extra?.base ?? symbol.replace(/USDT$/, '');
   return { symbol, base, name: extra?.name ?? base, cls: extra?.cls ?? 'rwa', maxLever: 0, takerFee: 0, mmr: 0, pricePlace: 2, sizePlace: 2 };
 }
+
+/**
+ * The recording ends here. Anything opened or written after it happened on the
+ * Live feed: recorded trades live inside the recording's own clock.
+ */
+export const RECORDING_END = snapshot().asOf;
+export const isLiveTime = (t: number): boolean => t > RECORDING_END;

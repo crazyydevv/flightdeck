@@ -3,7 +3,7 @@ import { verifyLedger } from '../core/tower';
 import { FlightPlan, LedgerEntry } from '../core/types';
 import { zulu } from '../core/util';
 import { Card, CopyButton, Pass } from './bits';
-import { instFor, PUBLIC_DECK } from './public';
+import { instFor, isLiveTime, PUBLIC_DECK } from './public';
 import { DeckApi } from './store';
 
 type Decision = { plan?: FlightPlan; decision?: string; failed?: string[] };
@@ -69,7 +69,7 @@ export function Ledger({ api }: { api: DeckApi }) {
                     <tr key={e.seq}>
                       <td className="num">{e.seq}</td>
                       <td className="num">{zulu(e.at)}</td>
-                      <td><span className={`tag tag-${e.kind}`}>{e.kind}</span></td>
+                      <td><span className={`tag tag-${e.kind}`}>{e.kind}</span> <Feed at={e.at} /></td>
                       <td className="wrap">{e.summary}</td>
                       <td className="mono">{e.hash.slice(0, 12)}</td>
                     </tr>
@@ -117,9 +117,15 @@ export function Ledger({ api }: { api: DeckApi }) {
 
 type Published = { entries: LedgerEntry[]; brokenAt: number | null };
 
+/** Which feed an entry came from: recorded entries live inside the recording's clock. */
+function Feed({ at }: { at: number }) {
+  return isLiveTime(at) ? <span className="tag tag-live">live</span> : <span className="tag tag-recorded">recorded</span>;
+}
+
 /** FLIGHTDECK's own deck, read from the server mirror. Read-only for everyone. */
 function PublicLog({ own }: { own: string }) {
   const [state, setState] = useState<Published | 'error' | null>(null);
+  const [liveOnly, setLiveOnly] = useState(true);
   useEffect(() => {
     if (own === PUBLIC_DECK) return;
     let live = true;
@@ -143,7 +149,9 @@ function PublicLog({ own }: { own: string }) {
       </Card>
     );
   }
-  const rows = [...state.entries].reverse();
+  const all = [...state.entries].reverse();
+  const liveCount = all.filter((e) => isLiveTime(e.at)).length;
+  const rows = liveOnly ? all.filter((e) => isLiveTime(e.at)) : all;
   const ok = state.brokenAt === 0;
   return (
     <Card title="FLIGHTDECK's public deck" aside={`read-only, ${state.entries.length} entries`} className="card-glass">
@@ -155,6 +163,13 @@ function PublicLog({ own }: { own: string }) {
             ? 'Showing the latest window of the chain. Each pass is verified when it opens.'
             : `Chain broken at entry ${state.brokenAt}.`}
       </p>
+      <div className="actions">
+        <div className="seg seg-small" role="group" aria-label="Which entries">
+          <button type="button" aria-pressed={liveOnly} onClick={() => setLiveOnly(true)}>Live trades ({liveCount})</button>
+          <button type="button" aria-pressed={!liveOnly} onClick={() => setLiveOnly(false)}>Everything ({all.length})</button>
+        </div>
+        <p className="fine">Live entries are real Bitget prices on the real clock. Recorded entries are the demo, flown on the 1 to 8 October recording.</p>
+      </div>
       <div className="scroll-x tall">
         <table className="tbl">
           <thead><tr><th>#</th><th>Zulu</th><th>Entry</th><th>What happened</th><th>Pass</th></tr></thead>
@@ -163,7 +178,7 @@ function PublicLog({ own }: { own: string }) {
               <tr key={e.seq}>
                 <td className="num">{e.seq}</td>
                 <td className="num">{zulu(e.at)}</td>
-                <td><span className={`tag tag-${e.kind}`}>{e.kind}</span></td>
+                <td><span className={`tag tag-${e.kind}`}>{e.kind}</span> <Feed at={e.at} /></td>
                 <td className="wrap">{e.summary}</td>
                 <td className="mono"><a href={passLink(PUBLIC_DECK, e.seq)}>{e.hash.slice(0, 10)}</a></td>
               </tr>

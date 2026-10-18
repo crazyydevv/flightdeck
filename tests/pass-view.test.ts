@@ -2,7 +2,7 @@
 // recorded eight: live-only symbols such as GOOGL get display terms.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { instFor, PUBLIC_DECK } from '../src/ui/public';
+import { instFor, isLiveTime, PUBLIC_DECK, RECORDING_END } from '../src/ui/public';
 
 test('recorded symbols keep their real terms', () => {
   const i = instFor('NVDAUSDT');
@@ -23,4 +23,12 @@ test('an unknown symbol still draws', () => {
 
 test('the public deck id is a valid deck id', () => {
   assert.match(PUBLIC_DECK, /^[a-z0-9]{6,24}$/);
+});
+
+test('entries and trades are told apart by the recording clock', () => {
+  // real entries from the public deck: #25 was flown on the recording, #19 and #21 on Live
+  assert.equal(isLiveTime(1791482400000), false);
+  assert.equal(isLiveTime(1791846000000), true);
+  assert.equal(isLiveTime(1791909884509), true);
+  assert.equal(isLiveTime(RECORDING_END), false);
 });

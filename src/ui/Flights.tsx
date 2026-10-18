@@ -6,7 +6,7 @@ import { debrief } from '../core/nightwatch';
 import { Flight, FlightPlan } from '../core/types';
 import { fmtPct, fmtUsd, HOUR, sha256, zulu } from '../core/util';
 import { Card, Level, Pass, PriceChart } from './bits';
-import { instFor } from './public';
+import { instFor, isLiveTime } from './public';
 import { DeckApi, ownFlights } from './store';
 
 const asPlan = (f: Flight): FlightPlan => ({
@@ -50,6 +50,26 @@ export function Flights({ api }: { api: DeckApi }) {
       )}
 
       {deck.airborne.map((f) => {
+        // A Live trade seen from the recorded feed: the recording has no hours
+        // after it opened, and landing it here would use an old price.
+        if (isLive && !isLiveTime(f.openedAt)) {
+          const base = instFor(f.symbol, market.instruments).base;
+          return (
+            <Card key={f.id} className="card-glass flight" title={`${f.id} airborne`} aside={<><span className="tag tag-recorded">recorded</span> {base} {f.leverage}x {f.side}</>} icon={<PiAirplaneTiltFill aria-hidden="true" />}>
+              <p className="lead">This is a demo trade flown on the 1 to 8 October recording. It can't be landed at today's price. Switch to Recorded to fly or land it.</p>
+              <div className="actions"><button type="button" className="btn btn-primary" onClick={() => actions.setFeed('recorded')}>Switch to Recorded</button></div>
+            </Card>
+          );
+        }
+        if (!isLive && isLiveTime(f.openedAt)) {
+          const base = instFor(f.symbol, market.instruments).base;
+          return (
+            <Card key={f.id} className="card-glass flight" title={`${f.id} airborne`} aside={<><span className="tag tag-live">live</span> {base} {f.leverage}x {f.side}</>} icon={<PiAirplaneTiltFill aria-hidden="true" />}>
+              <p className="lead">This is a Live trade on real Bitget prices. The recording ends on 8 October, before it opened, so it can't be flown or landed here. Switch to Live to follow it. Night Watch keeps minding it on the server either way.</p>
+              <div className="actions"><button type="button" className="btn btn-primary" onClick={() => actions.setFeed('live')}>Switch to Live</button></div>
+            </Card>
+          );
+        }
         const inst = market.instruments[f.symbol];
         // A flight on a live-only contract (GOOGL, META...) has no recorded bars:
         // say where to find it instead of drawing a chart with no data.

@@ -180,6 +180,8 @@ main { display: grid; gap: 16px; min-width: 0; animation: view-in 0.32s ease bot
 .tag-refusal { color: var(--stop); border-color: var(--stop); }
 .tag-clearance { color: var(--go); border-color: var(--go); }
 .tag-takeoff, .tag-watch { color: var(--sky); border-color: var(--sky); }
+.tag-live { color: var(--go); border-color: var(--go); }
+.tag-recorded { color: var(--ink-3); border-color: var(--line-2); }
 
 /* ---- landing ------------------------------------------------------------- */
 .gate { display: grid; gap: 34px; }

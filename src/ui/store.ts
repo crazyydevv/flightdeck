@@ -17,6 +17,7 @@ import { CHARTER, appendEntry, requestClearance } from '../core/tower';
 import { Clearance, Flight, FlightPlan, LedgerEntry, MarketState, Rule } from '../core/types';
 import { HOUR, sum } from '../core/util';
 import { tickFlight } from '../core/watchman';
+import { isLiveTime } from './public';
 import { ScenarioId, scenarioById } from './scenarios';
 
 export type Tab = 'gate' | 'board' | 'preflight' | 'tower' | 'flights' | 'watch' | 'blackbox' | 'ledger';
@@ -115,6 +116,8 @@ function settle(d: Deck, m: MarketState, to: number): Deck {
   for (const f of d.airborne) {
     const inst = m.instruments[f.symbol];
     if (!inst) continue;
+    // a flight is only ever flown on its own feed's prices
+    if ((m.source === 'live') !== isLiveTime(f.openedAt)) continue;
     const balance = d.startEquity + sum(logbook.map((x) => x.pnl ?? 0));
     const out = tickFlight(f, m, to, balance);
     for (const e of out.events) {
@@ -474,6 +477,11 @@ export function useDeck() {
       setDeck((d) => {
         const f = d.airborne.find((x) => x.id === id);
         if (!f) return d;
+        // A Live trade is never closed at a recorded price: that would write a
+        // false landing into a ledger nobody can edit afterwards.
+        if ((d.feed === 'live') !== isLiveTime(f.openedAt)) {
+          return { ...d, notice: isLiveTime(f.openedAt) ? `${f.id} is a Live trade. Switch to Live to land it at the real price.` : `${f.id} is a recorded trade. Switch to Recorded to land it inside the recording.` };
+        }
         const fi = market.instruments[f.symbol];
         const hit = land(f, lastPrice(market, f.symbol), now, 'landed', fi, equityOf(d));
         const bars = market.hourly[f.symbol] ?? [];

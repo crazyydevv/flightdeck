@@ -2,6 +2,7 @@
 // one button that does it. "Play it for me" presses that button on a timer.
 
 import { DeckApi, ownFlights } from './store';
+import { isLiveTime } from './public';
 
 export interface Step {
   n: number;
@@ -22,7 +23,10 @@ export function nextStep(api: DeckApi): Step {
   const flown = ownFlights(deck);
 
   if (deck.airborne.length) {
-    const f = deck.airborne[0];
+    // on the recorded feed, guide a recorded flight; a Live one only gets sent to Live
+    const f = deck.airborne.find((x) => isLiveTime(x.openedAt) === isLive) ?? deck.airborne[0];
+    if (!isLive && isLiveTime(f.openedAt)) return { n: 5, text: `${f.id} is a Live trade. It flies on real prices, so follow it on the Live feed.`, cta: 'Switch to Live', run: () => actions.setFeed('live') };
+    if (isLive && !isLiveTime(f.openedAt)) return { n: 5, text: `${f.id} is a demo trade from the recording. Fly or land it on the Recorded feed.`, cta: 'Switch to Recorded', run: () => actions.setFeed('recorded') };
     if (deck.flying) return { n: 5, text: `Flying ${f.id} through the recorded hours. Night Watch checks it after every one.`, wait: true };
     if (isLive) return { n: 5, text: `${f.id} is airborne on live prices${f.watch ? ', with Night Watch minding it' : ''}. Land it whenever you like.`, wait: true };
     if (atEnd) return { n: 5, text: 'The recording ends here. Bring the flight down.', cta: 'Land now', run: () => actions.landNow(f.id) };
