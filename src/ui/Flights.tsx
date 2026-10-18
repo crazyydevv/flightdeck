@@ -1,11 +1,12 @@
 import { PiAirplaneTiltFill, PiMoonStarsFill } from 'react-icons/pi';
 import { hoursMinutes } from '../core/calendar';
 import { unrealised } from '../core/flight';
-import { lastPrice, snapshot } from '../core/market';
+import { lastPrice } from '../core/market';
 import { debrief } from '../core/nightwatch';
 import { Flight, FlightPlan } from '../core/types';
 import { fmtPct, fmtUsd, HOUR, sha256, zulu } from '../core/util';
 import { Card, Level, Pass, PriceChart } from './bits';
+import { instFor } from './public';
 import { DeckApi, ownFlights } from './store';
 
 const asPlan = (f: Flight): FlightPlan => ({
@@ -50,6 +51,17 @@ export function Flights({ api }: { api: DeckApi }) {
 
       {deck.airborne.map((f) => {
         const inst = market.instruments[f.symbol];
+        // A flight on a live-only contract (GOOGL, META...) has no recorded bars:
+        // say where to find it instead of drawing a chart with no data.
+        if (!inst) {
+          const base = instFor(f.symbol).base;
+          return (
+            <Card key={f.id} className="card-glass flight" title={`${f.id} airborne`} aside={`${base} ${f.leverage}x ${f.side}`} icon={<PiAirplaneTiltFill aria-hidden="true" />}>
+              <p className="lead">{base} trades only on the Live feed, so the recorded data has no prices for it. Switch to Live to see this flight. Night Watch keeps minding it on the server either way.</p>
+              <div className="actions"><button type="button" className="btn btn-primary" onClick={() => actions.setFeed('live')}>Switch to Live</button></div>
+            </Card>
+          );
+        }
         const price = lastPrice(market, f.symbol);
         const pnl = unrealised(f, price) + (f.realised ?? 0);
         const cs = (market.hourly[f.symbol] ?? []).filter((c) => c.t >= f.openedAt - 12 * HOUR);
@@ -89,7 +101,7 @@ export function Flights({ api }: { api: DeckApi }) {
         <Card title="Landed" aside={`${landed.length} flown from this deck`}>
           <ul className="landed">
             {landed.slice(0, 6).map((f) => {
-              const inst = market.instruments[f.symbol] ?? snapshot().instruments[f.symbol];
+              const inst = instFor(f.symbol, market.instruments);
               return (
                 <li key={f.id}>
                   {inst && <Pass plan={asPlan(f)} inst={inst} state="LANDED" hash={sha256(f.id)} at={f.closedAt} />}
