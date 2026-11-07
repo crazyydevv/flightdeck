@@ -17,6 +17,7 @@ import { CHARTER, appendEntry, requestClearance } from '../core/tower';
 import { Clearance, Flight, FlightPlan, LedgerEntry, MarketState, Rule } from '../core/types';
 import { HOUR, sum } from '../core/util';
 import { tickFlight } from '../core/watchman';
+import { BACKGROUND_RETRY_MS, STOP, liveMissingNotice, retry } from './connect';
 import { isLiveTime } from './public';
 import { ScenarioId, scenarioById } from './scenarios';
 
@@ -174,7 +175,8 @@ export function useDeck() {
 
   const pull = useCallback(async (): Promise<MarketState | null> => {
     try {
-      const r = await fetch('api/market', { signal: AbortSignal.timeout(15_000) });
+      // the live market is a large answer; give a slow connection time to carry it
+      const r = await fetch('api/market', { signal: AbortSignal.timeout(30_000) });
       if (!r.ok) return null;
       const m = (await r.json()) as MarketState;
       return m && m.source === 'live' && m.hourly ? m : null;
@@ -183,22 +185,48 @@ export function useDeck() {
     }
   }, []);
 
-  // Look for a server once. A static preview has none and stays on the recording.
-  useEffect(() => {
-    let dead = false;
-    (async () => {
-      try {
-        const s = await fetch('api/status', { signal: AbortSignal.timeout(8000) });
-        if (!s.ok || dead) return;
-        const info = (await s.json()) as ServerInfo;
-        if (typeof info?.trading !== 'string') return;
-        setServer(info);
-      } catch { return; }
-      const m = await pull();
-      if (!dead && m) setLive(m);
+  // Find the server and its live market. A static preview has no server and stays on
+  // the recording; a dropped or slow request is retried rather than taken as no server.
+  const serverRef = useRef<ServerInfo | null>(null);
+  const noServer = useRef(false);
+  const connecting = useRef<Promise<MarketState | null> | null>(null);
+  const [linking, setLinking] = useState(false);
+  const connect = useCallback((): Promise<MarketState | null> => {
+    if (connecting.current) return connecting.current;
+    const run = (async () => {
+      const m = await retry<MarketState>(async () => {
+        if (!serverRef.current) {
+          let s: Response;
+          try { s = await fetch('api/status', { signal: AbortSignal.timeout(10_000) }); } catch { return null; }
+          if (!s.ok) { if (s.status === 404) { noServer.current = true; return STOP; } return null; }
+          const info = (await s.json().catch(() => null)) as ServerInfo | null;
+          if (typeof info?.trading !== 'string') { noServer.current = true; return STOP; }
+          serverRef.current = info;
+          setServer(info);
+        }
+        return pull();
+      });
+      if (m) setLive(m);
+      connecting.current = null;
+      return m;
     })();
-    return () => { dead = true; };
+    connecting.current = run;
+    return run;
   }, [pull]);
+
+  useEffect(() => { void connect(); }, [connect]);
+
+  // While live data is missing, keep trying: on a timer, when the connection comes
+  // back, and when the tab is looked at again.
+  useEffect(() => {
+    if (live) return;
+    const again = () => { if (!noServer.current) void connect(); };
+    const seen = () => { if (document.visibilityState === 'visible') again(); };
+    const id = setInterval(again, BACKGROUND_RETRY_MS);
+    window.addEventListener('online', again);
+    document.addEventListener('visibilitychange', seen);
+    return () => { clearInterval(id); window.removeEventListener('online', again); document.removeEventListener('visibilitychange', seen); };
+  }, [live, connect]);
 
   const isLive = deck.feed === 'live' && live !== null;
   const now = isLive ? wall : deck.simNow;
@@ -308,11 +336,23 @@ export function useDeck() {
     dismiss: () => patch({ notice: undefined }),
     setGuide: (g: Partial<Deck['guide']>) => setDeck((d) => ({ ...d, guide: { ...d.guide, ...g } })),
 
-    setFeed(feed: Deck['feed']) {
-      if (feed === 'live' && !live) return patch({ notice: 'No live server answered. Deploy with the /api routes, or run npm run dev, to fly on live Bitget data.' });
+    setFeed(feed: Deck['feed'], fresh?: MarketState) {
+      const liveNow = fresh ?? live;
+      if (feed === 'live' && !liveNow) {
+        if (noServer.current) return patch({ notice: liveMissingNotice(true) });
+        // not loaded yet: try now, and switch over as soon as it arrives
+        setLinking(true);
+        patch({ notice: undefined });
+        void connect().then((m) => {
+          setLinking(false);
+          if (m) actions.setFeed('live', m);
+          else patch({ notice: liveMissingNotice(noServer.current) });
+        });
+        return;
+      }
       setWall(Date.now());
       setDeck((d) => {
-        const m = feed === 'live' ? (live as MarketState) : viewAsOf(snapshot(), d.simNow);
+        const m = feed === 'live' ? (liveNow as MarketState) : viewAsOf(snapshot(), d.simNow);
         const symbol = m.instruments[d.plan.symbol] ? d.plan.symbol : Object.keys(m.instruments)[0];
         return { ...d, feed, flying: false, plan: { ...defaultPlan(m, symbol), side: d.plan.side }, filed: undefined, firstFiled: undefined, notice: undefined };
       });
@@ -585,7 +625,7 @@ export function useDeck() {
 
   return {
     deck, plan, market, now, equity, inst, contacts, report, route, briefs, post, whatIf, openLeaks, actions, busy, server, byok, crewAsking,
-    isLive, liveAvailable: live !== null, crewModel: modelBriefs && modelBriefs.hash === report.planHash ? modelBriefs.model : null, atEnd,
+    isLive, liveAvailable: live !== null, linking, crewModel: modelBriefs && modelBriefs.hash === report.planHash ? modelBriefs.model : null, atEnd,
   };
 }
 

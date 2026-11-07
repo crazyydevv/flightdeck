@@ -122,7 +122,7 @@ function PassViewer() {
 
 export function App() {
   const api = useDeck();
-  const { deck, now, report, contacts, actions, equity, isLive, liveAvailable, atEnd, openLeaks } = api;
+  const { deck, now, report, contacts, actions, equity, isLive, liveAvailable, linking, atEnd, openLeaks } = api;
   const [confirmReset, setConfirmReset] = useState(false);
   const session = sessionLabel(now);
   const top = contacts[0];
@@ -160,7 +160,7 @@ export function App() {
         </button>
         <div className="seg seg-small" role="group" aria-label="Data feed">
           <button type="button" aria-pressed={!isLive} onClick={() => actions.setFeed('recorded')}>Recorded</button>
-          <button type="button" aria-pressed={isLive} onClick={() => actions.setFeed('live')} title={liveAvailable ? 'Live Bitget data' : 'Needs the server routes'}>Live</button>
+          <button type="button" aria-pressed={isLive} aria-busy={linking} disabled={linking} onClick={() => actions.setFeed('live')} title={liveAvailable ? 'Live Bitget data' : 'Loads live Bitget data'}>{linking ? 'Connecting' : 'Live'}</button>
         </div>
       </header>
 
